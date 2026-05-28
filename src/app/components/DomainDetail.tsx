@@ -245,6 +245,7 @@ export function DomainDetail() {
                           type="text"
                           id="scan-domain"
                           readOnly
+                          aria-readonly="true"
                           value={domainName}
                           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-9 py-3 text-sm text-slate-700 shadow-sm"
                         />
