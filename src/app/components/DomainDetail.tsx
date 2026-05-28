@@ -236,11 +236,14 @@ export function DomainDetail() {
                 <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
                   <div className="space-y-4" style={{ fontFamily: "Inter, sans-serif" }}>
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-slate-700">Target Domain</Label>
+                      <Label htmlFor="scan-domain" className="text-sm font-semibold text-slate-700">
+                        Target Domain
+                      </Label>
                       <div className="relative">
                         <Globe className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
+                          id="scan-domain"
                           readOnly
                           value={domainName}
                           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-9 py-3 text-sm text-slate-700 shadow-sm"
