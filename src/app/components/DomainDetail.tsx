@@ -5,6 +5,15 @@ import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -12,10 +21,14 @@ import {
   Shield,
   ShieldCheck,
   Lock,
+  Globe,
   Activity,
   Settings,
   ScanLine,
   RefreshCw,
+  Search,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 
 const domainMap: Record<string, string> = {
@@ -74,6 +87,29 @@ const timelineEvents = [
     color: "text-slate-600",
     bg: "bg-slate-100",
     dot: "bg-slate-400",
+  },
+];
+
+const scanSteps = [
+  {
+    title: "Discover & Analyze",
+    description: "We discover your domain, subdomains, and public-facing assets.",
+    icon: Search,
+  },
+  {
+    title: "Check Security Configuration",
+    description: "We will analyze your SSL/TLS, headers, DNS, and other security configurations.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Deliver Clear Report",
+    description: "You'll get a clear report with explanations and actionable recommendations.",
+    icon: FileText,
+  },
+  {
+    title: "Identify Risks",
+    description: "Our AI engine identifies misconfigurations and ranks them by severity.",
+    icon: AlertTriangle,
   },
 ];
 
@@ -138,6 +174,8 @@ export function DomainDetail() {
   ]);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [slackAlerts, setSlackAlerts] = useState(false);
+  const [scanType, setScanType] = useState("quick");
+  const [notifyOnComplete, setNotifyOnComplete] = useState(true);
 
   const toggleThreshold = (t: string) => {
     setSelectedThresholds((prev) =>
@@ -158,7 +196,7 @@ export function DomainDetail() {
       </button>
 
       {/* Domain Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-wrap">
           <h1
             className="text-2xl font-bold text-gray-900"
@@ -172,21 +210,163 @@ export function DomainDetail() {
           </span>
         </div>
 
-        {/* Active Monitoring Toggle */}
-        <div className="flex items-center gap-3 bg-white border border-[#E5E7EB] rounded-xl px-5 py-3 shadow-none">
-          <div>
-            <p className="text-sm font-semibold text-slate-900" style={{ fontFamily: "Geist, sans-serif" }}>
-              Active Monitoring
-            </p>
-            <p className="text-xs text-slate-500" style={{ fontFamily: "Inter, sans-serif" }}>
-              {monitoringActive ? "Scanning in progress" : "Monitoring paused"}
-            </p>
+        <div className="flex items-center gap-3">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="text-white shadow-sm" style={{ backgroundColor: "#072E28" }}>
+                Run New Scan
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl sm:max-w-4xl p-8 gap-6 max-h-[85vh] overflow-y-auto">
+              <div className="space-y-2">
+                <DialogTitle
+                  className="text-2xl font-bold text-slate-900"
+                  style={{ fontFamily: "Geist, sans-serif" }}
+                >
+                  Scan Your Website
+                </DialogTitle>
+                <DialogDescription
+                  className="text-sm text-slate-500"
+                  style={{ fontFamily: "Inter, sans-serif" }}
+                >
+                  Run a safe non-intrusive security scan to find misconfigurations and potential
+                  risks.
+                </DialogDescription>
+              </div>
+
+              <div className="space-y-5" style={{ fontFamily: "Inter, sans-serif" }}>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700">Target Domain</Label>
+                  <div className="relative">
+                    <Globe className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      disabled
+                      value={domainName}
+                      className="w-full rounded-lg border border-[#E5E7EB] bg-slate-100 px-9 py-2.5 text-sm text-slate-700"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    We will scan through this verified domain and all associated assets.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700">Scan Type</Label>
+                  <RadioGroup
+                    value={scanType}
+                    onValueChange={setScanType}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                  >
+                    <div>
+                      <RadioGroupItem value="quick" id="scan-quick" className="peer sr-only" />
+                      <Label
+                        htmlFor="scan-quick"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3 text-sm font-semibold text-slate-900 cursor-pointer transition-colors peer-data-[state=checked]:border-[#072E28] peer-data-[state=checked]:bg-[#F0F7F5]"
+                      >
+                        Quick Scan
+                      </Label>
+                    </div>
+                    <div>
+                      <RadioGroupItem value="deep" id="scan-deep" className="peer sr-only" />
+                      <Label
+                        htmlFor="scan-deep"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-[#E5E7EB] p-3 text-sm font-semibold text-slate-900 cursor-pointer transition-colors peer-data-[state=checked]:border-[#072E28] peer-data-[state=checked]:bg-[#F0F7F5]"
+                      >
+                        Deep Scan
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="notify-scan"
+                    checked={notifyOnComplete}
+                    onCheckedChange={(value) => setNotifyOnComplete(!!value)}
+                    className="data-[state=checked]:bg-[#072E28] data-[state=checked]:border-[#072E28]"
+                  />
+                  <Label htmlFor="notify-scan" className="text-sm text-slate-700 cursor-pointer">
+                    Notify me when the scan is complete
+                  </Label>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3
+                  className="text-base font-semibold text-slate-900"
+                  style={{ fontFamily: "Geist, sans-serif" }}
+                >
+                  What will happen next?
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {scanSteps.map((step) => {
+                    const Icon = step.icon;
+                    return (
+                      <div
+                        key={step.title}
+                        className="flex items-start gap-3 rounded-lg border border-[#E5E7EB] bg-white p-4"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                          <Icon className="h-4 w-4 text-slate-600" />
+                        </div>
+                        <div>
+                          <p
+                            className="text-sm font-semibold text-slate-900"
+                            style={{ fontFamily: "Geist, sans-serif" }}
+                          >
+                            {step.title}
+                          </p>
+                          <p
+                            className="text-xs text-slate-500 mt-1"
+                            style={{ fontFamily: "Inter, sans-serif" }}
+                          >
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div
+                className="flex items-start gap-3 rounded-lg px-4 py-3"
+                style={{ backgroundColor: "#A0E870" }}
+              >
+                <Shield className="h-5 w-5 text-slate-800" />
+                <p className="text-sm text-slate-900" style={{ fontFamily: "Inter, sans-serif" }}>
+                  We only access publicly available data. No intrusive testing is performed.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button className="text-white" style={{ backgroundColor: "#072E28" }}>
+                  Start Scan
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Active Monitoring Toggle */}
+          <div className="flex items-center gap-3 bg-white border border-[#E5E7EB] rounded-xl px-5 py-3 shadow-none">
+            <div>
+              <p className="text-sm font-semibold text-slate-900" style={{ fontFamily: "Geist, sans-serif" }}>
+                Active Monitoring
+              </p>
+              <p className="text-xs text-slate-500" style={{ fontFamily: "Inter, sans-serif" }}>
+                {monitoringActive ? "Scanning in progress" : "Monitoring paused"}
+              </p>
+            </div>
+            <Switch
+              checked={monitoringActive}
+              onCheckedChange={setMonitoringActive}
+              className="data-[state=checked]:bg-[#072E28]"
+            />
           </div>
-          <Switch
-            checked={monitoringActive}
-            onCheckedChange={setMonitoringActive}
-            className="data-[state=checked]:bg-[#072E28]"
-          />
         </div>
       </div>
 
